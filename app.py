@@ -126,15 +126,66 @@ if page == "📋 지표 해설":
     st.markdown("<div class='page-subtitle'>중앙일보 교수연구 분야 10개 지표 및 연구전략기획팀 자체 산출 3개 지표 안내</div>", unsafe_allow_html=True)
     notice()
     rows = [{'NO':a,'지표명':('🔵 '+b if f else b),'가중치':c,'점수(자체 산출)':d,'순위':e,'담당':g} for a,b,c,d,e,f,g in JJ_10]
-    st.markdown("<div class='section-header'>중앙일보 교수연구 분야 10개 지표</div>", unsafe_allow_html=True)
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    df_jj = pd.DataFrame(rows)
+
+    def highlight_jj(row):
+        if str(row['지표명']).startswith('🔵'):
+            return ['background-color:#DBEAFE;'] * len(row)
+        return [''] * len(row)
+
+    st.markdown("<div class='section-header'>중앙일보 대학평가 교수연구 분야 10개 지표</div>", unsafe_allow_html=True)
+    st.dataframe(df_jj.style.apply(highlight_jj, axis=1), use_container_width=True, hide_index=True)
+    st.markdown("""
+    <div class='card-note' style='margin-top:8px;'>
+        🔵 연구전략기획팀에서 Scholytics를 활용하여 직접 산출하는 지표 (3·5·7번) &nbsp;|&nbsp;
+        3·5·7번 점수는 2026년 5월 기준 자체 산출값으로 중앙일보 공시값과 다를 수 있습니다.
+    </div>
+    """, unsafe_allow_html=True)
+
     st.markdown("<div class='section-header'>3개 지표 산출 방법</div>", unsafe_allow_html=True)
-    c1,c2=st.columns(2)
+    c1, c2 = st.columns(2)
     with c1:
-        st.markdown("<div class='card'><div class='card-title'>① 국제학술지 논문당 피인용</div><div class='card-body'>Scholytics Index(Scopus 기반), 평가연도 기준 -5년~-2년, 자기인용·의심학술지 제외. 순위 기준은 Average of FWCI times JoongAng Ratio입니다.</div></div>", unsafe_allow_html=True)
-        st.markdown("<div class='card'><div class='card-title'>② 국제협업논문</div><div class='card-body'>International Collaboration 문서 비중을 기준으로 산출합니다. 국제협업률 = 국제협업 문서수 ÷ 전체 문서수입니다.</div></div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class='card'>
+            <div class='card-title'>① 국제학술지 논문당 피인용 &nbsp;<span style='font-size:11px;color:#6B7A99;font-weight:400;'>가중치 20</span></div>
+            <div class='card-body'>
+                <b>산출 조건</b><br>
+                · Scholytics Index (Scopus 기반) · 평가연도 기준 -5년~-2년<br>
+                · 자기인용(Self-citation) 및 의심학술지 제외<br><br>
+                <b>순위 결정 기준</b><br>
+                Average of FWCI times JoongAng Ratio<br>
+                = Σ(논문별 FWCI × 중앙일보 가중치) ÷ 전체 논문수
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class='card'>
+            <div class='card-title'>② 국제협업논문 &nbsp;<span style='font-size:11px;color:#6B7A99;font-weight:400;'>가중치 5</span></div>
+            <div class='card-body'>
+                <b>산출 조건</b><br>
+                · 발행연도·저널인덱스·자기인용 제외 조건은 지표 ①과 동일<br>
+                · 2024년 중앙일보 평가부터 종합 항목으로 신규 추가<br><br>
+                <b>순위 결정 기준</b><br>
+                국제협업 비중 = 국제협업 문서수 ÷ 전체 문서수
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     with c2:
-        st.markdown("<div class='card'><div class='card-title'>③ 인문사회 국내논문당 피인용</div><div class='card-body'>KCI 계열 자료에서 인문·사회·체육 분야별 논문당 피인용을 산출하고, 논문비율과 Z-score 방식으로 최종 점수를 계산합니다.</div><div class='card-note'>※ Z기준값: 명지대를 제외한 53개교 평균 적용</div></div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class='card'>
+            <div class='card-title'>③ 인문사회 국내논문당 피인용 &nbsp;<span style='font-size:11px;color:#6B7A99;font-weight:400;'>가중치 10</span></div>
+            <div class='card-body'>
+                <b>산출 조건</b><br>
+                · KCI Premium + KCI + KCI Candidate<br>
+                · 인문 / 사회 / 체육 3개 분야 (이공계 제외)<br>
+                · 중앙일보 카테고리 적용<br><br>
+                <b>산출 방법</b><br>
+                분야별 논문당 피인용을 추출한 후, 논문수 비율로 가중한
+                Z-score를 합산하여 최종 점수를 산출합니다.
+            </div>
+            <div class='card-note'>※ Z기준값: 명지대를 제외한 53개교 평균 적용</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 elif page == "📊 기본 연구 관련 데이터 지표":
     st.markdown("<div class='page-title'>기본 연구 관련 데이터 지표</div>", unsafe_allow_html=True)
@@ -163,13 +214,22 @@ elif page == "🏆 중앙일보 교수연구 3개 지표 순위":
     c2.metric('국제협업논문', f"{int(mj2['산출순위'])}위 / {total}개교", f"상위 {top_pct(mj2['산출순위'],total):.1f}% 이내 · {mj2['국제협업 논문']:.4f}", delta_color='off')
     c3.metric('인문사회 국내논문당 피인용', f"{int(mj3['산출순위'])}위 / {total}개교", f"상위 {top_pct(mj3['산출순위'],total):.1f}% 이내 · Z값 {float(mj3['Z값']):.4f}", delta_color='off')
     st.markdown(f"<div class='highlight-box'><b>★ 명지대학교는 중앙일보 2025년 11월 발표 평가 결과에 포함되지 않았으나</b>, 동일·유사 기준 자체 산출 시 국제학술지 논문당 피인용 <b>{int(mj1['산출순위'])}위</b>, 인문사회 국내논문당 피인용 <b>{int(mj3['산출순위'])}위</b> 수준으로 나타납니다.</div>", unsafe_allow_html=True)
+    def rank_options(total):
+        return {f"전체 ({total}개 대학)": total, "상위 30개 대학": 30, "상위 20개 대학": 20}
+
     t1,t2,t3=st.tabs(['① 국제학술지 논문당 피인용','② 국제협업논문','③ 인문사회 국내논문당 피인용'])
     with t1:
-        n=st.selectbox('표시 대학 수',[total,30,20],key='n1'); st.plotly_chart(hbar(d1.head(n).sort_values('Average of FWCI times JoongAng Ratio'), '대학명', 'Average of FWCI times JoongAng Ratio'), use_container_width=True)
+        opts = rank_options(total)
+        n = opts[st.selectbox('표시 대학 수', list(opts.keys()), key='n1')]
+        st.plotly_chart(hbar(d1.head(n).sort_values('Average of FWCI times JoongAng Ratio'), '대학명', 'Average of FWCI times JoongAng Ratio'), use_container_width=True)
     with t2:
-        n=st.selectbox('표시 대학 수',[total,30,20],key='n2'); st.plotly_chart(hbar(d2.head(n).sort_values('국제협업 논문'), '대학명', '국제협업 논문'), use_container_width=True)
+        opts = rank_options(total)
+        n = opts[st.selectbox('표시 대학 수', list(opts.keys()), key='n2')]
+        st.plotly_chart(hbar(d2.head(n).sort_values('국제협업 논문'), '대학명', '국제협업 논문'), use_container_width=True)
     with t3:
-        n=st.selectbox('표시 대학 수',[total,30,20],key='n3'); st.plotly_chart(hbar(d3.head(n).sort_values('점수'), '대학명(한글)', '점수'), use_container_width=True)
+        opts = rank_options(total)
+        n = opts[st.selectbox('표시 대학 수', list(opts.keys()), key='n3')]
+        st.plotly_chart(hbar(d3.head(n).sort_values('점수'), '대학명(한글)', '점수'), use_container_width=True)
 
 elif page == "🔍 3개 지표 심층 분석":
     st.markdown("<div class='page-title'>3개 지표 심층 분석</div>", unsafe_allow_html=True)
