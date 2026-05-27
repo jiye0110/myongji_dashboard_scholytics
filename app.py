@@ -235,22 +235,188 @@ elif page == "🔍 3개 지표 심층 분석":
     st.markdown("<div class='page-title'>3개 지표 심층 분석</div>", unsafe_allow_html=True)
     st.markdown("<div class='page-subtitle'>각 지표의 세부 구성 요소와 명지대 위치 분석</div>", unsafe_allow_html=True)
     sel = st.radio('분석 지표 선택', ['① 국제학술지 논문당 피인용','② 국제협업논문','③ 인문사회 국내논문당 피인용'], horizontal=True)
+
+    # ── ① 국제학술지 ──
     if sel.startswith('①'):
+        st.markdown("<div class='section-header'>Average of FWCI times JoongAng Ratio × 논문 규모 분포</div>", unsafe_allow_html=True)
         dm = d1.merge(d0[['대학명','Publications','Citations']], on='대학명', how='left')
-        fig = px.scatter(dm, x='Publications', y='Average of FWCI times JoongAng Ratio', size='Citations', color='is_mj', hover_name='대학명', color_discrete_map={True:MJ_COLOR, False:BASE_COLOR})
-        fig.add_hline(y=dm['Average of FWCI times JoongAng Ratio'].mean(), line_dash='dot'); fig.add_vline(x=dm['Publications'].mean(), line_dash='dot'); fig.update_layout(**LAYOUT, height=500, showlegend=False)
+        avg_pub   = dm['Publications'].mean()
+        avg_afwci = dm['Average of FWCI times JoongAng Ratio'].mean()
+        fig = px.scatter(dm, x='Publications', y='Average of FWCI times JoongAng Ratio',
+                         size='Citations', color='is_mj', hover_name='대학명',
+                         color_discrete_map={True:MJ_COLOR, False:BASE_COLOR},
+                         size_max=50,
+                         labels={'Publications':'논문 수 (편)', 'Average of FWCI times JoongAng Ratio':'Avg FWCI×중앙비율', 'Citations':'피인용 수'})
+        fig.add_hline(y=avg_afwci, line_dash='dot', line_color='#718096',
+                      annotation_text=f'Avg FWCI×중앙비율 평균({avg_afwci:.4f})',
+                      annotation_font=dict(size=10, color='#718096'))
+        fig.add_vline(x=avg_pub, line_dash='dot', line_color='#718096',
+                      annotation_text=f'논문수 평균({int(avg_pub):,}편)',
+                      annotation_font=dict(size=10, color='#718096'))
+        fig.update_layout(**LAYOUT, height=500, showlegend=False,
+                          xaxis=dict(title='논문 수 (편)', gridcolor='#F0F0F0', tickformat=','),
+                          yaxis=dict(title='Avg FWCI × 중앙일보 비율', gridcolor='#F0F0F0'))
         st.plotly_chart(fig, use_container_width=True)
-        d0r=d0.copy(); d0r['상위저널_비율']=d0r['Publications in top journal percentiles']/d0r['Publications']*100; d0r['상위피인용_비율']=d0r['Publications in top citation percentiles']/d0r['Publications']*100
-        fig2=px.scatter(d0r,x='상위저널_비율',y='상위피인용_비율',color='is_mj',hover_name='대학명',color_discrete_map={True:MJ_COLOR,False:BASE_COLOR}); fig2.update_layout(**LAYOUT,height=420,showlegend=False); st.plotly_chart(fig2,use_container_width=True)
+
+        mj_afwci = mj1['Average of FWCI times JoongAng Ratio']
+        mj_pub   = int(mj0['Publications'])
+        if mj_pub < avg_pub and mj_afwci >= avg_afwci:
+            box_cls = 'highlight-box'
+            msg = f"명지대는 <b>논문 규모 평균 이하({mj_pub:,}편)</b>이지만, <b>순위 결정 지표(Avg FWCI×중앙비율: {mj_afwci:.4f})는 평균 이상({avg_afwci:.4f})</b>으로 소규모 고품질 연구 그룹에 위치합니다."
+        elif mj_pub < avg_pub and mj_afwci < avg_afwci:
+            box_cls = 'warn-box'
+            msg = f"명지대는 논문 규모({mj_pub:,}편)와 순위 결정 지표({mj_afwci:.4f}) 모두 평균 이하입니다."
+        elif mj_pub >= avg_pub and mj_afwci >= avg_afwci:
+            box_cls = 'good-box'
+            msg = f"명지대는 논문 규모({mj_pub:,}편)와 순위 결정 지표({mj_afwci:.4f}) 모두 평균 이상입니다."
+        else:
+            box_cls = 'warn-box'
+            msg = f"명지대는 논문 규모({mj_pub:,}편)는 평균 이상이나 순위 결정 지표({mj_afwci:.4f})는 평균 이하입니다."
+        st.markdown(f"<div class='{box_cls}'>{msg}</div>", unsafe_allow_html=True)
+
+        st.markdown("<div class='section-header'>상위 저널 논문 비율 vs 상위 피인용 논문 비율</div>", unsafe_allow_html=True)
+        d0r = d0.copy()
+        d0r['상위저널_비율']  = d0r['Publications in top journal percentiles'] / d0r['Publications'] * 100
+        d0r['상위피인용_비율'] = d0r['Publications in top citation percentiles'] / d0r['Publications'] * 100
+        avg_tj = d0r['상위저널_비율'].mean()
+        avg_tc = d0r['상위피인용_비율'].mean()
+        fig2 = px.scatter(d0r, x='상위저널_비율', y='상위피인용_비율',
+                          color='is_mj', hover_name='대학명',
+                          color_discrete_map={True:MJ_COLOR, False:BASE_COLOR},
+                          labels={'상위저널_비율':'상위 저널 논문 비율 (%)', '상위피인용_비율':'상위 피인용 논문 비율 (%)'})
+        fig2.add_hline(y=avg_tc, line_dash='dot', line_color='#718096',
+                       annotation_text=f'평균({avg_tc:.1f}%)', annotation_font=dict(size=10, color='#718096'))
+        fig2.add_vline(x=avg_tj, line_dash='dot', line_color='#718096',
+                       annotation_text=f'평균({avg_tj:.1f}%)', annotation_font=dict(size=10, color='#718096'))
+        fig2.update_layout(**LAYOUT, height=420, showlegend=False,
+                           xaxis=dict(title='상위 저널 논문 비율 (%)', gridcolor='#F0F0F0'),
+                           yaxis=dict(title='상위 피인용 논문 비율 (%)', gridcolor='#F0F0F0'))
+        st.plotly_chart(fig2, use_container_width=True)
+
+        mj_tj = mj0['Publications in top journal percentiles'] / mj0['Publications'] * 100
+        mj_tc = mj0['Publications in top citation percentiles'] / mj0['Publications'] * 100
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Avg FWCI×중앙비율", f"{mj_afwci:.4f}", f"평균 {avg_afwci:.4f}")
+        c2.metric("상위 저널 논문 비율", f"{mj_tj:.1f}%", f"평균 {avg_tj:.1f}%")
+        c3.metric("상위 피인용 논문 비율", f"{mj_tc:.1f}%", f"평균 {avg_tc:.1f}%")
+
+    # ── ② 국제협업 ──
     elif sel.startswith('②'):
-        fig=px.scatter(d2,x='Publications',y='국제협업 논문',size='Publications_국제협업',color='is_mj',hover_name='대학명',color_discrete_map={True:MJ_COLOR,False:BASE_COLOR}); fig.add_hline(y=d2['국제협업 논문'].mean(),line_dash='dot'); fig.add_vline(x=d2['Publications'].mean(),line_dash='dot'); fig.update_layout(**LAYOUT,height=500,showlegend=False); st.plotly_chart(fig,use_container_width=True)
+        st.markdown("<div class='section-header'>논문 규모 vs 국제협업률</div>", unsafe_allow_html=True)
+        avg_pub2 = d2['Publications'].mean()
+        avg_rate = d2['국제협업 논문'].mean()
+        fig = px.scatter(d2, x='Publications', y='국제협업 논문',
+                         size='Publications_국제협업', color='is_mj', hover_name='대학명',
+                         color_discrete_map={True:MJ_COLOR, False:BASE_COLOR},
+                         size_max=50,
+                         labels={'Publications':'전체 논문 수 (편)', '국제협업 논문':'국제협업률', 'Publications_국제협업':'국제협업 논문 수'})
+        fig.add_hline(y=avg_rate, line_dash='dot', line_color='#718096',
+                      annotation_text=f'평균 협업률({avg_rate:.3f})',
+                      annotation_font=dict(size=10, color='#718096'))
+        fig.add_vline(x=avg_pub2, line_dash='dot', line_color='#718096',
+                      annotation_text=f'논문수 평균({int(avg_pub2):,}편)',
+                      annotation_font=dict(size=10, color='#718096'))
+        fig.update_layout(**LAYOUT, height=500, showlegend=False,
+                          xaxis=dict(title='전체 논문 수 (편)', gridcolor='#F0F0F0', tickformat=','),
+                          yaxis=dict(title='국제협업률', gridcolor='#F0F0F0'))
+        st.plotly_chart(fig, use_container_width=True)
+
+        mj_rate = mj2['국제협업 논문']
+        if mj_rate < avg_rate:
+            st.markdown(f"""
+            <div class='warn-box'>
+                명지대 국제협업률 <b>{mj_rate:.4f}</b>로 전체 평균({avg_rate:.4f}) 대비
+                <b>{(avg_rate - mj_rate)*100:.2f}%p 하회</b>합니다.
+                전체 {int(mj2['산출순위'])}위 / {total}개교로, 국제 연구 네트워크 확대가 필요한 영역입니다.
+            </div>""", unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class='good-box'>
+                명지대 국제협업률 <b>{mj_rate:.4f}</b>로 전체 평균({avg_rate:.4f}) 이상입니다.
+                전체 {int(mj2['산출순위'])}위 / {total}개교.
+            </div>""", unsafe_allow_html=True)
+
+        st.markdown("<div class='section-header'>국제협업률 상위 20개교 비교</div>", unsafe_allow_html=True)
+        top20 = d2.head(20).copy()
+        if not top20['is_mj'].any():
+            top20 = pd.concat([top20, d2[d2['is_mj']]]).reset_index(drop=True)
+        top20 = top20.sort_values('국제협업 논문', ascending=False)
+        colors_t = [MJ_COLOR if v else BASE_COLOR for v in top20['is_mj']]
+        fig2 = go.Figure(go.Bar(
+            x=top20['대학명'], y=top20['국제협업 논문'],
+            marker_color=colors_t,
+            hovertemplate="<b>%{x}</b><br>협업률: %{y:.4f}<extra></extra>",
+        ))
+        fig2.add_hline(y=avg_rate, line_dash='dash', line_color='#718096',
+                       annotation_text=f'전체 평균({avg_rate:.3f})',
+                       annotation_font=dict(size=10))
+        fig2.update_layout(**LAYOUT, height=380,
+                           xaxis=dict(title='', tickangle=-35, tickfont=dict(size=10)),
+                           yaxis=dict(title='국제협업률', gridcolor='#F0F0F0'))
+        st.plotly_chart(fig2, use_container_width=True)
+        st.markdown("<div class='footnote'>명지대가 상위 20위 밖일 경우 자동으로 추가 표시됩니다.</div>", unsafe_allow_html=True)
+
+    # ── ③ 인문사회 ──
     else:
-        labels=['인문','사회','체육']; vals=[float(mj3['인문_논문수']),float(mj3['사회_논문수']),float(mj3['체육_논문수'])]
-        c1,c2=st.columns([1,2])
+        st.markdown("<div class='section-header'>분야별 논문 구성 (명지대)</div>", unsafe_allow_html=True)
+        labels = ['인문', '사회', '체육']
+        vals   = [float(mj3['인문_논문수']), float(mj3['사회_논문수']), float(mj3['체육_논문수'])]
+        c1, c2 = st.columns([1, 2])
         with c1:
-            fig=go.Figure(go.Pie(labels=labels,values=vals,hole=.45,marker_colors=['#0D2B5E','#93B8E0','#E8392A'])); fig.update_layout(**LAYOUT,height=300); st.plotly_chart(fig,use_container_width=True)
+            fig = go.Figure(go.Pie(
+                labels=labels, values=vals, hole=.45,
+                marker_colors=['#0D2B5E','#93B8E0','#E8392A'],
+                textinfo='label+percent',
+                hovertemplate="%{label}: %{value:,}편 (%{percent})<extra></extra>",
+            ))
+            fig.update_layout(**LAYOUT, height=300, showlegend=False,
+                              title=dict(text=f"총 {int(mj3['총_논문수']):,}편", x=0.5, font=dict(size=13)))
+            st.plotly_chart(fig, use_container_width=True)
         with c2:
-            fig=go.Figure(); fig.add_bar(name='명지대',x=labels,y=[float(mj3['Avg_인문']),float(mj3['Avg_사회']),float(mj3['Avg_체육'])],marker_color=MJ_COLOR); fig.add_bar(name='전체 평균',x=labels,y=[d3['Avg_인문'].mean(),d3['Avg_사회'].mean(),d3['Avg_체육'].mean()],marker_color=BASE_COLOR); fig.update_layout(**LAYOUT,height=300,barmode='group'); st.plotly_chart(fig,use_container_width=True)
+            st.markdown("<div class='section-header'>분야별 논문당 평균 피인용 (명지대 vs 전체 평균)</div>", unsafe_allow_html=True)
+            avg_a_인문 = d3['Avg_인문'].mean()
+            avg_a_사회 = d3['Avg_사회'].mean()
+            avg_a_체육 = d3['Avg_체육'].mean()
+            fig_bar = go.Figure()
+            fig_bar.add_trace(go.Bar(name='명지대', x=labels,
+                                     y=[float(mj3['Avg_인문']), float(mj3['Avg_사회']), float(mj3['Avg_체육'])],
+                                     marker_color=MJ_COLOR,
+                                     hovertemplate="%{x}: %{y:.3f}<extra>명지대</extra>"))
+            fig_bar.add_trace(go.Bar(name='전체 평균', x=labels,
+                                     y=[avg_a_인문, avg_a_사회, avg_a_체육],
+                                     marker_color=BASE_COLOR,
+                                     hovertemplate="%{x}: %{y:.3f}<extra>전체 평균</extra>"))
+            fig_bar.update_layout(**LAYOUT, height=300, barmode='group',
+                                  yaxis=dict(title='논문당 평균 피인용', gridcolor='#F0F0F0'),
+                                  legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1))
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+        st.markdown("<div class='section-header'>분야별 Z·Score 기여도 (레이더)</div>", unsafe_allow_html=True)
+        mj_scores  = [float(mj3['Score_인문']), float(mj3['Score_사회']), float(mj3['Score_체육'])]
+        avg_scores = [d3['Score_인문'].mean(), d3['Score_사회'].mean(), d3['Score_체육'].mean()]
+        fig_r = go.Figure()
+        fig_r.add_trace(go.Scatterpolar(
+            r=mj_scores + [mj_scores[0]], theta=['인문','사회','체육','인문'],
+            fill='toself', name='명지대',
+            line_color=MJ_COLOR, fillcolor='rgba(232,57,42,0.15)',
+        ))
+        fig_r.add_trace(go.Scatterpolar(
+            r=avg_scores + [avg_scores[0]], theta=['인문','사회','체육','인문'],
+            fill='toself', name='전체 평균',
+            line_color=BASE_COLOR, fillcolor='rgba(147,184,224,0.15)',
+        ))
+        fig_r.update_layout(**LAYOUT, height=400,
+                            polar=dict(radialaxis=dict(visible=True, gridcolor='#E4E9F2')),
+                            legend=dict(orientation='h', yanchor='bottom', y=-0.15, xanchor='center', x=0.5))
+        st.plotly_chart(fig_r, use_container_width=True)
+
+        st.markdown("<div class='section-header'>명지대 세부 수치</div>", unsafe_allow_html=True)
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("인문 Avg 피인용", f"{float(mj3['Avg_인문']):.3f}", f"평균 {avg_a_인문:.3f}")
+        c2.metric("사회 Avg 피인용", f"{float(mj3['Avg_사회']):.3f}", f"평균 {avg_a_사회:.3f}")
+        c3.metric("체육 Avg 피인용", f"{float(mj3['Avg_체육']):.3f}", f"평균 {avg_a_체육:.3f}")
+        c4.metric("최종 Z값", f"{float(mj3['Z값']):.4f}", f"순위 {int(mj3['산출순위'])}위")
+        st.markdown("<div class='footnote'>Z기준값: 명지대 제외 53개교 평균 &nbsp;|&nbsp; 점수 = 인문·사회·체육 분야별 Z점수 합산</div>", unsafe_allow_html=True)
 
 else:
     st.markdown("<div class='page-title'>명지대 종합 프로파일</div>", unsafe_allow_html=True)
