@@ -212,29 +212,19 @@ if page == "📋 지표 해설":
 
     # ── 데이터 기준 안내 ──
     st.markdown("<div class='section-header'>데이터 기준 안내</div>", unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("""
-        <div class='card'>
-            <div class='card-title'>🔵 산출값 (본 대시보드)</div>
-            <div class='card-body'>
-                Scholytics(스콜리틱스) 기반으로 <b>2026년 5월</b> 기준 직접 산출한 수치입니다.<br>
-                명지대학교를 포함한 <b>54개 대학</b>의 데이터가 포함됩니다.
-            </div>
-            <div class='card-note'>※ 중앙일보 미선정 4개교(명지대·카톨릭대·한국교통대·강릉원주대) 포함</div>
+    st.markdown("""
+    <div class='card'>
+        <div class='card-title'>🔵 산출값 (본 대시보드)</div>
+        <div class='card-body'>
+            Scholytics(스콜리틱스) 기반으로 <b>2026년 5월</b> 기준 직접 산출한 수치입니다.<br>
+            중앙일보 선정 <b>53개 대학 + 명지대학교</b>, 총 <b>54개 대학</b>의 데이터가 포함됩니다.
         </div>
-        """, unsafe_allow_html=True)
-    with c2:
-        st.markdown("""
-        <div class='card'>
-            <div class='card-title'>🟤 중앙일보 공시값</div>
-            <div class='card-body'>
-                중앙일보가 <b>2025년 11월</b> 공시한 수치입니다.<br>
-                중앙일보 선정 <b>53개 대학</b>에만 존재하며, 명지대는 해당 없습니다.
-            </div>
-            <div class='card-note'>※ 기준 시점 차이(2026.5 vs 2025.11)로 두 값의 직접 비교는 참고용입니다</div>
+        <div class='card-note'>
+            ※ 중앙일보 공시값은 2025년 11월 기준 선정 53개교에만 존재하며, 명지대는 해당 없습니다.<br>
+            ※ 기준 시점 차이(2026.5 vs 2025.11)로 두 값의 직접 비교는 참고용입니다.
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
     # ── 기본 지표 안내 ──
     st.markdown("<div class='section-header'>기본 지표 안내</div>", unsafe_allow_html=True)
@@ -262,15 +252,7 @@ if page == "📋 지표 해설":
             <div class='card-body'>전체 논문이 타 논문에 인용된 횟수. 연구의 영향력을 나타내는 절대적 수치입니다.</div>
         </div>
         """, unsafe_allow_html=True)
-        st.markdown("""
-        <div class='card'>
-            <div class='card-title'>Self-citations (자기인용)</div>
-            <div class='card-body'>
-                저자 기준으로 자신의 논문이 자신의 다른 논문에 인용된 횟수입니다.<br>
-                <b>2024년 중앙일보 대학평가부터 자기인용을 제외한 상태로 모든 평가를 진행합니다.</b>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+
     with c2:
         st.markdown("""
         <div class='card'>
@@ -547,21 +529,30 @@ elif page == "🔍 지표별 심층 분석":
 
     # ── 심층 ①: 국제학술지 ──
     if sel == "① 국제학술지 논문당 피인용":
-        st.markdown("<div class='section-header'>FWCI × 논문 규모 분포</div>", unsafe_allow_html=True)
-        avg_pub = d1['Publications'].mean()
-        avg_fwci = d1['FWCI'].mean()
+        st.markdown("<div class='section-header'>순위 결정 지표(Average of FWCI times JoongAng Ratio) × 논문 규모 분포</div>", unsafe_allow_html=True)
+        avg_pub  = d1['Publications'].mean()
+        avg_afwci = d1['Average of FWCI times JoongAng Ratio'].mean()
 
         fig = px.scatter(
-            d1, x='Publications', y='FWCI',
+            d1, x='Publications', y='Average of FWCI times JoongAng Ratio',
             size='Citations', color='is_mj',
             hover_name='대학명',
             color_discrete_map={True: MJ_COLOR, False: BASE_COLOR},
-            hover_data={'Publications': ':,', 'FWCI': ':.3f', 'Citations': ':,', 'is_mj': False},
-            labels={'Publications': '논문 수 (편)', 'FWCI': 'FWCI', 'Citations': '피인용 수'},
+            hover_data={
+                'Publications': ':,',
+                'Average of FWCI times JoongAng Ratio': ':.4f',
+                'Citations': ':,',
+                'is_mj': False
+            },
+            labels={
+                'Publications': '논문 수 (편)',
+                'Average of FWCI times JoongAng Ratio': 'Avg FWCI×중앙비율',
+                'Citations': '피인용 수'
+            },
             size_max=50,
         )
-        fig.add_hline(y=avg_fwci, line_dash='dot', line_color='#718096', line_width=1,
-                      annotation_text=f'FWCI 평균({avg_fwci:.3f})',
+        fig.add_hline(y=avg_afwci, line_dash='dot', line_color='#718096', line_width=1,
+                      annotation_text=f'Avg FWCI×중앙비율 평균({avg_afwci:.4f})',
                       annotation_font=dict(size=10, color='#718096'))
         fig.add_vline(x=avg_pub, line_dash='dot', line_color='#718096', line_width=1,
                       annotation_text=f'논문수 평균({int(avg_pub):,}편)',
@@ -569,19 +560,20 @@ elif page == "🔍 지표별 심층 분석":
         fig.update_layout(**LAYOUT, height=500,
             showlegend=False,
             xaxis=dict(title='논문 수 (편)', gridcolor='#F0F0F0', tickformat=','),
-            yaxis=dict(title='FWCI', gridcolor='#F0F0F0'),
+            yaxis=dict(title='Avg FWCI × 중앙일보 비율', gridcolor='#F0F0F0'),
         )
         st.plotly_chart(fig, use_container_width=True)
 
         # 명지대 위치 해설
-        if mj1['Publications'] < avg_pub and mj1['FWCI'] >= avg_fwci:
-            box_cls, msg = 'highlight-box', f"명지대는 <b>논문 규모 평균 이하({int(mj1['Publications']):,}편)</b>이지만, <b>FWCI는 평균 이상({mj1['FWCI']:.3f})</b>으로 소규모 고품질 연구 그룹에 위치합니다."
-        elif mj1['Publications'] < avg_pub and mj1['FWCI'] < avg_fwci:
-            box_cls, msg = 'warn-box', f"명지대는 논문 규모({int(mj1['Publications']):,}편)와 FWCI({mj1['FWCI']:.3f}) 모두 평균 이하입니다. 연구 규모 및 질적 영향력 동시 제고가 필요합니다."
-        elif mj1['Publications'] >= avg_pub and mj1['FWCI'] >= avg_fwci:
-            box_cls, msg = 'good-box', f"명지대는 논문 규모({int(mj1['Publications']):,}편)와 FWCI({mj1['FWCI']:.3f}) 모두 평균 이상의 우수한 그룹에 위치합니다."
+        mj_afwci = mj1['Average of FWCI times JoongAng Ratio']
+        if mj1['Publications'] < avg_pub and mj_afwci >= avg_afwci:
+            box_cls, msg = 'highlight-box', f"명지대는 <b>논문 규모 평균 이하({int(mj1['Publications']):,}편)</b>이지만, <b>순위 결정 지표(Avg FWCI×중앙비율)는 평균 이상({mj_afwci:.4f})</b>으로 소규모 고품질 연구 그룹에 위치합니다."
+        elif mj1['Publications'] < avg_pub and mj_afwci < avg_afwci:
+            box_cls, msg = 'warn-box', f"명지대는 논문 규모({int(mj1['Publications']):,}편)와 순위 결정 지표({mj_afwci:.4f}) 모두 평균 이하입니다. 연구 규모 및 질적 영향력 동시 제고가 필요합니다."
+        elif mj1['Publications'] >= avg_pub and mj_afwci >= avg_afwci:
+            box_cls, msg = 'good-box', f"명지대는 논문 규모({int(mj1['Publications']):,}편)와 순위 결정 지표({mj_afwci:.4f}) 모두 평균 이상의 우수한 그룹에 위치합니다."
         else:
-            box_cls, msg = 'warn-box', f"명지대는 논문 규모({int(mj1['Publications']):,}편)는 평균 이상이나 FWCI({mj1['FWCI']:.3f})는 평균 이하로, 질적 영향력 제고가 필요합니다."
+            box_cls, msg = 'warn-box', f"명지대는 논문 규모({int(mj1['Publications']):,}편)는 평균 이상이나 순위 결정 지표({mj_afwci:.4f})는 평균 이하로, 질적 영향력 제고가 필요합니다."
         st.markdown(f"<div class='{box_cls}'>{msg}</div>", unsafe_allow_html=True)
 
         st.markdown("<div class='section-header'>자기인용 비율 vs 상위 피인용 논문 비율</div>", unsafe_allow_html=True)
