@@ -6,7 +6,7 @@ import glob, os
 
 # ── 페이지 설정 ──────────────────────────────────────────────
 st.set_page_config(
-    page_title="명지대학교 교수연구 지표 대시보드",
+    page_title="중앙일보 대학평가 교수연구 분야 3개 지표 대시보드",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -177,7 +177,12 @@ def load_data(path: str):
 
 # ── 사이드바 ─────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("### 🎓 명지대학교\n**교수연구 지표 대시보드**")
+    st.markdown(
+        "### 🎓 명지대학교\n"
+        "**중앙일보 대학평가**<br>"
+        "**교수연구 분야 3개 지표 대시보드**",
+        unsafe_allow_html=True
+    )
     st.markdown("---")
     page = st.radio(
         "페이지",
@@ -193,8 +198,8 @@ with st.sidebar:
         "<div style='font-size:11px;color:#93A8D4;'>"
         "산출: 연구전략기획팀<br>"
         "산출 기준: 2026년 5월<br>"
-        "비교 기준: 중앙일보 2025년 11월<br>"
-        "대상: 54개 대학 (명지대 포함)</div>",
+        "대상: 2025 중앙일보 대학평가 기준<br>"
+        "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;상위 53개 대학 + 명지대학교</div>",
         unsafe_allow_html=True,
     )
 
