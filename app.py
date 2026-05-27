@@ -210,6 +210,7 @@ if page == "📋 지표 해설":
     st.markdown("<div class='page-title'>지표 해설</div>", unsafe_allow_html=True)
     st.markdown("<div class='page-subtitle'>중앙일보 대학평가 교수연구 부문 3개 지표의 산출 기준 및 방법</div>", unsafe_allow_html=True)
 
+    # ── 데이터 기준 안내 ──
     st.markdown("<div class='section-header'>데이터 기준 안내</div>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
@@ -217,10 +218,10 @@ if page == "📋 지표 해설":
         <div class='card'>
             <div class='card-title'>🔵 산출값 (본 대시보드)</div>
             <div class='card-body'>
-                Scopus 기반으로 <b>2026년 5월</b> 기준 직접 산출한 수치입니다.<br>
+                Scholytics(스콜리틱스) 기반으로 <b>2026년 5월</b> 기준 직접 산출한 수치입니다.<br>
                 명지대학교를 포함한 <b>54개 대학</b>의 데이터가 포함됩니다.
             </div>
-            <div class='card-note'>※ 중앙일보 미선정 4개교(명지대 등) 포함</div>
+            <div class='card-note'>※ 중앙일보 미선정 4개교(명지대·카톨릭대·한국교통대·강릉원주대) 포함</div>
         </div>
         """, unsafe_allow_html=True)
     with c2:
@@ -231,97 +232,162 @@ if page == "📋 지표 해설":
                 중앙일보가 <b>2025년 11월</b> 공시한 수치입니다.<br>
                 중앙일보 선정 <b>53개 대학</b>에만 존재하며, 명지대는 해당 없습니다.
             </div>
-            <div class='card-note'>※ 기준 시점 차이로 두 값의 직접 비교는 참고용입니다</div>
+            <div class='card-note'>※ 기준 시점 차이(2026.5 vs 2025.11)로 두 값의 직접 비교는 참고용입니다</div>
         </div>
         """, unsafe_allow_html=True)
 
+    # ── 기본 지표 안내 ──
+    st.markdown("<div class='section-header'>기본 지표 안내</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class='card'>
+        <div class='card-title'>Scholytics 원천 데이터 지표</div>
+        <div class='card-body'>
+            중앙일보 대학평가 교수연구 부문 산출에 사용되는 Scholytics 기본 지표입니다.<br>
+            아래 지표들을 조합하여 각 평가 지표의 순위를 산출합니다.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("""
+        <div class='card'>
+            <div class='card-title'>Publications</div>
+            <div class='card-body'>평가 기간 내 전체 논문 수. 대학의 연구 규모를 나타내는 기본 지표입니다.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class='card'>
+            <div class='card-title'>Citations</div>
+            <div class='card-body'>전체 논문이 타 논문에 인용된 횟수. 연구의 영향력을 나타내는 절대적 수치입니다.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class='card'>
+            <div class='card-title'>Self-citations (자기인용)</div>
+            <div class='card-body'>
+                저자 기준으로 자신의 논문이 자신의 다른 논문에 인용된 횟수입니다.<br>
+                <b>2024년 중앙일보 대학평가부터 자기인용을 제외한 상태로 모든 평가를 진행합니다.</b>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c2:
+        st.markdown("""
+        <div class='card'>
+            <div class='card-title'>FWCI (Field-Weighted Citation Impact)</div>
+            <div class='card-body'>
+                동일 발행연도·분야·문서유형 기준 <b>세계 평균 대비 피인용 비율</b>입니다.<br>
+                · 1.0 = 세계 평균<br>
+                · 1.0 초과 = 세계 평균 이상<br>
+                · 1.0 미만 = 세계 평균 이하
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class='card'>
+            <div class='card-title'>Publications in top journal percentiles</div>
+            <div class='card-body'>상위 저널에 게재된 논문 수입니다. 연구 성과의 질적 수준을 나타냅니다.</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class='card'>
+            <div class='card-title'>Publications in top citation percentiles</div>
+            <div class='card-body'>동일 발행연도·분야 기준 상위 피인용 논문 수입니다. 해당 분야에서 주목받는 논문의 수를 나타냅니다.</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── 지표 ① ──
     st.markdown("<div class='section-header'>지표 ① — 국제학술지 논문당 피인용</div>", unsafe_allow_html=True)
-    c1, c2 = st.columns([2, 1])
+    c1, c2 = st.columns(2)
     with c1:
         st.markdown("""
         <div class='card'>
-            <div class='card-title'>산출 방법</div>
+            <div class='card-title'>산출 조건</div>
             <div class='card-body'>
-                Scopus에서 추출한 대학별 논문 데이터를 바탕으로,
-                <b>FWCI(Field-Weighted Citation Impact)</b>에 중앙일보 반영 비율을 곱한 값의 평균으로 산출합니다.<br><br>
-                <b>FWCI</b>란 분야별 세계 평균 피인용 수 대비 해당 논문의 피인용 수 비율로,<br>
-                1.0 = 세계 평균, 1.0 초과 = 세계 평균 이상을 의미합니다.
+                · 데이터 출처: <b>Scholytics Index</b> (Scopus 기반)<br>
+                · 평가 기간: 평가연도 기준 <b>-5년 ~ -2년 (총 4년)</b><br>
+                · Self-citation(자기인용): <b>제외</b> (저자 기준)<br>
+                · Potentially predatory journal(의심학술지): <b>제외</b>
             </div>
         </div>
         """, unsafe_allow_html=True)
     with c2:
         st.markdown("""
         <div class='card'>
-            <div class='card-title'>주요 세부 지표</div>
+            <div class='card-title'>순위 결정 기준 지표</div>
             <div class='card-body'>
-                · Publications (논문 수)<br>
-                · Citations (피인용 수)<br>
-                · Self-citations (자기인용)<br>
-                · FWCI<br>
-                · 상위 저널 논문 비율<br>
-                · 상위 피인용 논문 비율
+                <b>Average of FWCI times JoongAng Ratio</b><br><br>
+                = Σ(논문별 FWCI × 중앙일보 가중치) ÷ 전체 논문수<br><br>
+                이 값이 높을수록 분야 평균 대비 피인용 영향력이 높은 논문을 많이 보유하고 있음을 의미하며,
+                <b>기관별 순위의 결정 기준</b>이 됩니다.
             </div>
         </div>
         """, unsafe_allow_html=True)
 
+    # ── 지표 ② ──
     st.markdown("<div class='section-header'>지표 ② — 국제협업논문</div>", unsafe_allow_html=True)
-    c1, c2 = st.columns([2, 1])
+    c1, c2 = st.columns(2)
     with c1:
         st.markdown("""
         <div class='card'>
-            <div class='card-title'>산출 방법</div>
+            <div class='card-title'>산출 조건</div>
             <div class='card-body'>
-                전체 논문 중 <b>해외 기관과 공동 저술한 논문의 비율(%)</b>로 산출합니다.<br><br>
-                국제 연구 네트워크의 활성화 정도를 나타내며,
-                QS·THE 세계대학평가에도 반영되는 지표입니다.
+                · <b>2024년 중앙일보 대학평가부터 종합 평가 항목으로 신규 추가</b><br>
+                · 발행연도·저널인덱스·자기인용 제외 조건은 지표 ①과 동일<br>
+                · Collaboration Type: <b>International Collaboration</b> 적용
             </div>
         </div>
         """, unsafe_allow_html=True)
     with c2:
         st.markdown("""
         <div class='card'>
-            <div class='card-title'>주요 세부 지표</div>
+            <div class='card-title'>순위 결정 기준 지표</div>
             <div class='card-body'>
-                · Publications (전체 논문 수)<br>
-                · Publications_국제협업<br>
-                &nbsp;&nbsp;(국제협업 논문 수)<br>
-                · 국제협업 논문 비율
+                <b>국제협업 비중</b><br><br>
+                = 국제협업 문서수 ÷ 전체 문서수<br><br>
+                전체 논문 중 해외 기관과 공동 저술한 논문의 비율로,
+                국제 연구 네트워크의 활성화 정도를 나타냅니다.
             </div>
         </div>
         """, unsafe_allow_html=True)
 
+    # ── 지표 ③ ──
     st.markdown("<div class='section-header'>지표 ③ — 인문사회 국내논문당 피인용</div>", unsafe_allow_html=True)
-    c1, c2 = st.columns([2, 1])
+    c1, c2 = st.columns(2)
     with c1:
         st.markdown("""
         <div class='card'>
-            <div class='card-title'>산출 방법</div>
+            <div class='card-title'>산출 조건</div>
             <div class='card-body'>
-                KCI(한국학술지인용색인) 기반으로 인문·사회·체육 분야별 논문의
-                <b>논문당 평균 피인용 수(Avg Citations × 저널 비율)</b>를 분야 비중에 따라 가중합산하여 산출합니다.<br><br>
-                최종 점수는 분야별 Z점수를 합산하며,
-                <b>Z기준값은 명지대를 제외한 53개교 평균</b>을 기준으로 설정합니다.
+                · 데이터 출처: <b>KCI Premium + KCI + KCI Candidate</b> (KCI 계열 3개 인덱스)<br>
+                · 평가 분야: <b>인문 / 사회 / 체육</b> 3개 분야 (이공계 제외)<br>
+                · Subject Area: 중앙일보 카테고리 적용<br>
+                · 발행연도: 지표 ①과 동일
             </div>
         </div>
         """, unsafe_allow_html=True)
     with c2:
         st.markdown("""
         <div class='card'>
-            <div class='card-title'>주요 세부 지표</div>
+            <div class='card-title'>산출 방법 (6단계)</div>
             <div class='card-body'>
-                · 인문/사회/체육 논문 수<br>
-                · 분야별 논문 비중(P)<br>
-                · 분야별 논문당 피인용(Avg)<br>
-                · 분야별 Score<br>
-                · 분야별 Z·Score<br>
-                · 최종 실값 / Z값 / 점수
+                ① 분야별 <b>Average of Citations times JoongAng Ratio</b> 추출<br>
+                &nbsp;&nbsp;&nbsp;(각 논문의 인용수 × 중앙일보 가중치 합산 ÷ 논문수)<br>
+                ② 분야별 논문수 비율 산출<br>
+                &nbsp;&nbsp;&nbsp;P_인문 / P_사회 / P_체육<br>
+                ③ 분야별 중간 지표 산출 (Z-score 방식)<br>
+                &nbsp;&nbsp;&nbsp;Score = (대학별 분야값 ÷ 전체 평가대학 분야 평균) × 논문비율<br>
+                ④ 분야별 Score 합산 → 실값<br>
+                ⑤ Z값 환산 → 점수 산출<br>
+                ⑥ 점수 내림차순 → <b>순위 결정</b>
             </div>
+            <div class='card-note'>※ Z기준값: 명지대를 제외한 53개교 평균 적용</div>
         </div>
         """, unsafe_allow_html=True)
 
     st.markdown("""
     <div class='footnote'>
-        ※ 산출 기준: Scopus (국제학술지·국제협업), KCI (인문사회) &nbsp;|&nbsp;
+        ※ 산출 기준: Scholytics Index (국제학술지·국제협업), KCI 계열 (인문사회) &nbsp;|&nbsp;
         산출 시점: 2026년 5월 &nbsp;|&nbsp; 중앙일보 공시: 2025년 11월
     </div>
     """, unsafe_allow_html=True)
